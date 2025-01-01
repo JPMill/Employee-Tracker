@@ -18,6 +18,7 @@ async function mainMenu() {
         'Add an employee',
         'Update an employee role',
         'View employees by department',
+        'Delete a department',
         'Exit',
       ],
     },
@@ -47,6 +48,9 @@ async function mainMenu() {
       break;
     case 'View employees by department':
       await viewEmployeesByDepartment();
+      break;
+    case 'Delete a department':
+      await deleteDepartment();
       break;
     case 'Exit':
       db.end();
@@ -234,6 +238,34 @@ async function viewEmployeesByDepartment() {
     WHERE role.department_id = $1
   `, [department_id]);
   console.table(rows);
+}
+
+// Delete a department
+async function deleteDepartment() {
+  const departments = await db.query('SELECT * FROM department');
+  const { department_id } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'department_id',
+      message: 'Select the department to delete:',
+      choices: departments.rows.map((department) => ({
+        name: department.name,
+        value: department.id,
+      })),
+    },
+  ]);
+
+  const roles = await db.query('SELECT id FROM role WHERE department_id = $1', [department_id]);
+  const roleIds = roles.rows.map((role) => role.id);
+
+  if (roleIds.length > 0) {
+    await db.query('DELETE FROM employee WHERE role_id = ANY($1)', [roleIds]);
+  }
+
+  await db.query('DELETE FROM role WHERE department_id = $1', [department_id]);
+
+  await db.query('DELETE FROM department WHERE id = $1', [department_id]);
+  console.log('Department deleted.');
 }
 
 mainMenu();
