@@ -17,6 +17,7 @@ async function mainMenu() {
         'Add a role',
         'Add an employee',
         'Update an employee role',
+        'View employees by department',
         'Exit',
       ],
     },
@@ -43,6 +44,9 @@ async function mainMenu() {
       break;
     case 'Update an employee role':
       await updateEmployeeRole();
+      break;
+    case 'View employees by department':
+      await viewEmployeesByDepartment();
       break;
     case 'Exit':
       db.end();
@@ -199,11 +203,37 @@ async function updateEmployeeRole() {
     },
   ]);
 
+  
+
   await db.query('UPDATE employee SET role_id = $1 WHERE id = $2', [
     role_id,
     employee_id,
   ]);
   console.log('Updated employee role.');
+}
+
+// View employees by department
+async function viewEmployeesByDepartment() {
+  const departments = await db.query('SELECT * FROM department');
+  const { department_id } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'department_id',
+      message: 'Select the department:',
+      choices: departments.rows.map((department) => ({
+        name: department.name,
+        value: department.id,
+      })),
+    },
+  ]);
+
+  const { rows } = await db.query(`
+    SELECT employee.id, employee.first_name, employee.last_name, role.title AS role
+    FROM employee
+    JOIN role ON employee.role_id = role.id
+    WHERE role.department_id = $1
+  `, [department_id]);
+  console.table(rows);
 }
 
 mainMenu();
