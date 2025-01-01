@@ -20,6 +20,7 @@ async function mainMenu() {
         'View employees by department',
         'Delete a department',
         'Delete a role',
+        'Delete an employee',
         'Exit',
       ],
     },
@@ -55,6 +56,9 @@ async function mainMenu() {
       break;
     case 'Delete a role':
       await deleteRole();
+      break;
+    case 'Delete an employee':
+      await deleteEmployee();
       break;
     case 'Exit':
       db.end();
@@ -291,6 +295,22 @@ async function deleteRole() {
   console.log('Role deleted.');
 }
 
+async function deleteEmployee() {
+  const employees = await db.query('SELECT * FROM employee');
+  const { employee_id } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'employee_id',
+      message: 'Select the employee to delete:',
+      choices: employees.rows.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      })),
+    },
+  ]);
 
+  await db.query('DELETE FROM employee WHERE id = $1', [employee_id]);
+  console.log('Employee deleted.');
+}
 
 mainMenu();
