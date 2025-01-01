@@ -55,16 +55,16 @@ async function mainMenu() {
 
 // View all departments
 async function viewDepartments() {
-  const { rows } = await db.query('SELECT * FROM departments');
+  const { rows } = await db.query('SELECT * FROM department');
   console.table(rows);
 }
 
 // View all roles
 async function viewRoles() {
   const { rows } = await db.query(`
-    SELECT roles.id, roles.title, roles.salary, departments.name AS department
-    FROM roles
-    JOIN departments ON roles.department_id = departments.id;
+    SELECT roles.id, roles.title, roles.salary, department.name AS department
+    FROM role AS roles
+    JOIN department ON roles.department_id = department.id;
   `);
   console.table(rows);
 }
@@ -73,12 +73,12 @@ async function viewRoles() {
 async function viewEmployees() {
   const { rows } = await db.query(`
     SELECT employees.id, employees.first_name, employees.last_name, roles.title AS role,
-           roles.salary, departments.name AS department, 
+           roles.salary, department.name AS department, 
            CONCAT(manager.first_name, ' ', manager.last_name) AS manager
-    FROM employees
-    JOIN roles ON employees.role_id = roles.id
-    JOIN departments ON roles.department_id = departments.id
-    LEFT JOIN employees AS manager ON employees.manager_id = manager.id;
+    FROM employee AS employees
+    JOIN role AS roles ON employees.role_id = roles.id
+    JOIN department ON roles.department_id = department.id
+    LEFT JOIN employee AS manager ON employees.manager_id = manager.id;
   `);
   console.table(rows);
 }
@@ -93,13 +93,13 @@ async function addDepartment() {
     },
   ]);
 
-  await db.query('INSERT INTO departments (name) VALUES ($1)', [name]);
+  await db.query('INSERT INTO department (name) VALUES ($1)', [name]);
   console.log(`Added department: ${name}`);
 }
 
 // Add a role
 async function addRole() {
-  const departments = await db.query('SELECT * FROM departments');
+  const departments = await db.query('SELECT * FROM department');
   const { name, salary, department_id } = await inquirer.prompt([
     {
       type: 'input',
@@ -123,7 +123,7 @@ async function addRole() {
   ]);
 
   await db.query(
-    'INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)',
+    'INSERT INTO role (title, salary, department_id) VALUES ($1, $2, $3)',
     [name, salary, department_id]
   );
   console.log(`Added role: ${name}`);
@@ -131,8 +131,8 @@ async function addRole() {
 
 // Add an employee
 async function addEmployee() {
-  const roles = await db.query('SELECT * FROM roles');
-  const employees = await db.query('SELECT * FROM employees');
+  const roles = await db.query('SELECT * FROM role');
+  const employees = await db.query('SELECT * FROM employee');
   const { first_name, last_name, role_id, manager_id } = await inquirer.prompt([
     {
       type: 'input',
@@ -168,7 +168,7 @@ async function addEmployee() {
   ]);
 
   await db.query(
-    'INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',
+    'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)',
     [first_name, last_name, role_id, manager_id]
   );
   console.log(`Added employee: ${first_name} ${last_name}`);
@@ -176,8 +176,8 @@ async function addEmployee() {
 
 // Update an employee role
 async function updateEmployeeRole() {
-  const employees = await db.query('SELECT * FROM employees');
-  const roles = await db.query('SELECT * FROM roles');
+  const employees = await db.query('SELECT * FROM employee');
+  const roles = await db.query('SELECT * FROM role');
   const { employee_id, role_id } = await inquirer.prompt([
     {
       type: 'list',
@@ -199,7 +199,7 @@ async function updateEmployeeRole() {
     },
   ]);
 
-  await db.query('UPDATE employees SET role_id = $1 WHERE id = $2', [
+  await db.query('UPDATE employee SET role_id = $1 WHERE id = $2', [
     role_id,
     employee_id,
   ]);
