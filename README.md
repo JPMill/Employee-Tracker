@@ -18,6 +18,7 @@ To install this project, run 'npm install' in the command line. After all depend
 
 ## Usage
 After you run 'node index.js' you will be presented with multiple different choices to interact with the database. You can view all tables, add new data to the tables, and delete data from the tables.
+[Demo Video](./assets/videos/Untitled%20Video%20January%201,%202025%209_32%20PM.mp4)
 
 
 ## License
